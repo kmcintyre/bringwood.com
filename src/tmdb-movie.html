@@ -1,0 +1,43 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id="tmdb-movie">
+<template>
+<style include="iron-flex iron-flex-alignment">
+	:host {
+		width: 500px 
+	}
+	img.movie {
+		padding: 2px
+	}	
+	.fixed {
+		width: 500px
+	}		
+</style>
+<div class="layout horizontal fixed">
+	<img src="https://image.tmdb.org/t/p/w92/{{tmdb.poster_path}}" class="movie"/>
+	<div class="layout vertical flex">
+		<div><b>{{tmdb.original_title}}</b></div>
+		<div>Release date: {{tmdb.release_date}}</div>
+	</div>
+   <div>
+   	rating: {{tmdb.vote_average}}
+   </div>	
+</div>   
+</template>
+<script>
+    class TmdbMovie extends Polymer.Element {
+        static get is() {
+            return 'tmdb-movie';
+        }
+        static get properties() {
+            return {
+         	 tmdb: {
+         		 type: Object
+         	 }
+          }
+        }
+    }
+    customElements.define(TmdbMovie.is, TmdbMovie);
+</script>
+</dom-module>

@@ -1,2 +1,5 @@
 script
 html
+bower_components
+node_modules
+build

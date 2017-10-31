@@ -1,0 +1,13 @@
+{
+  "name": "bringwood",
+  "dependencies": {
+    "polymer": "^2.2.0",
+    "app-layout": "latest",
+    "google-chart": "latest",
+    "date-fns": "latest",
+    "iron-icons": "latest",
+    "paper-item": "latest",
+    "paper-toggle-button": "latest"
+  },
+  "private": true
+}

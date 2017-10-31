@@ -1,0 +1,196 @@
+<link rel="import" href="../bower_components/app-layout/app-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+
+<link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<link rel="import" href="../bower_components/iron-icons/av-icons.html">
+
+<link rel="import" href="tweet-wrapper.html">
+<link rel="import" href="rank-wrapper.html">
+<link rel="import" href="tmdb-tv.html">
+<link rel="import" href="tmdb-movie.html">
+
+<dom-module id="bringwood-app">
+   <template>
+    <style>
+    :host {
+      --app-drawer-width: 400px;
+    }    
+    app-header {
+      background-image: url(/curator_background.png);
+      height: 152px;  		
+    }
+    .drawer-content {
+      padding-top: 152px;
+    }
+    paper-icon-item {
+    	padding-left: 50px
+    }
+	app-drawer {	
+	  --app-drawer-content-container: {	      
+	      height: calc(100% - 152px);
+	      overflow: auto;
+	      background-color: #eee;      	  
+	  };
+	}
+	#contents {
+		margin-top:10px
+	}
+    </style>
+	<app-header-layout fullbleed>
+		<app-header id="appheader" slot="header" condenses fixed shadow effects="resize-title">
+              <app-toolbar>
+                 <paper-icon-button icon="menu" drawer-toggle class="menu"></paper-icon-button>
+                 <div condensed-title>
+                    <h1 class="trans title">bringwood.com</h1>
+                 </div>
+              </app-toolbar>
+              <app-toolbar>
+                 <div main-title spacer>
+                    <h1 class="trans title">bringwood.com</h1>
+                 </div>
+              </app-toolbar>
+        </app-header>
+	    <app-drawer-layout>		
+	      <app-drawer slot="drawer">
+	          <div class="drawer-content">
+		          <paper-icon-item>
+		          		<paper-toggle-button id="environment_toggle" slot="item-icon" checked$="{{ environment.on }}"></paper-toggle-button>
+		          		<span>{{ environment.title }}</span>
+		          </paper-icon-item>
+		          <paper-icon-item>		          		
+		            	<iron-icon icon="av:play-circle-outline" slot="item-icon"></iron-icon>
+		            	<span>Stream</span>
+		          </paper-icon-item>
+	          </div>
+	      </app-drawer>	      
+	      <div id="contents"></div>
+		</app-drawer-layout>                       
+	</app-header-layout>   	
+   </template>
+<script>
+if ( true ) {
+	window.twttr = (function(d, s, id) {
+		  var js, fjs = d.getElementsByTagName(s)[0],
+		    t = window.twttr || {};
+		  if (d.getElementById(id)) return t;
+		  js = d.createElement(s);
+		  js.id = id;
+		  js.src = "https://platform.twitter.com/widgets.js";
+		  fjs.parentNode.insertBefore(js, fjs);
+
+		  t._e = [];
+		  t.ready = function(f) {
+		    t._e.push(f);
+		    console.log(window.twttr)
+		  };
+		  return t;
+		}(document, "script", "twitter-wjs"));	
+}
+var service = JSON.parse(localStorage.getItem('environment')).service
+const socket = new WebSocket('ws://' + service + ':8080');
+
+socket.addEventListener('open', function (event) {
+ socket.send('Hello Server!');
+});
+
+var contents;
+
+var base_domain = window.location.hostname
+if ( base_domain.split('.').length == 3 ) {
+	base_domain = base_domain.substring(base_domain.indexOf('.') + 1)
+}
+
+var prod = { on: true, title: 'Production', service: 'service.' + base_domain };
+var dev = { on: false, title: 'Development', service: 'dev.' + base_domain };
+
+socket.addEventListener('message', function (event) {
+ try {
+	 var tweet = JSON.parse(event.data)
+	 
+	 if ( tweet._tweet_id ) {
+		 console.log('tweet id:', tweet._tweet_id) 
+		 if ( tweet.unknown_retweet ) {
+			 console.log('unknown retweet')
+		 } else if ( tweet.known_retweet ) {
+			 console.log('known retweet')
+		 } else {
+			 var tw = document.createElement('tweet-wrapper')
+			 tw.setAttribute('id', tweet._tweet_id)
+			 
+			 var slot_tweet = document.createElement('span')
+			 slot_tweet.setAttribute('slot', 'tweet')
+			 tw.appendChild(slot_tweet)
+			 
+			 
+			 fetch('http://' + service + '/rank', {
+    			method: 'post',
+    			body: JSON.stringify({ 'league': tweet.league, 'profile': tweet.profile})
+  		 	 }).then((resp) => resp.json()).then(function(rank_data) {									
+				 var rank = document.createElement('rank-wrapper')
+				 rank.setAttribute('slot', 'rank')
+				 rank.setAttribute('rank', JSON.stringify(rank_data))
+				 rank.setAttribute('current_rank', tweet.rank ? parseInt(tweet.rank): 0)
+				 tw.appendChild(rank)				
+			 })			 
+						 			 
+			 fetch('http://' + service + '/noted/' + tweet.noted_profile.split('/').pop(-1)).then((resp) => resp.json()).then(function(media_data) {
+				if ( media_data ) {
+					 var tmdb = document.createElement('tmdb-' + media_data.media_type )
+					 tmdb.setAttribute('slot', 'tmdb')
+					 tmdb.setAttribute('tmdb', JSON.stringify(media_data))
+					 tw.appendChild(tmdb)					
+				}
+			 })			 			 
+			 
+			 contents.insertBefore(tw, contents.firstChild);
+			 
+		 	 console.log('attempt:', tweet._tweet_id)
+			 twttr.widgets.createTweet(
+				  tweet._tweet_id,
+				  slot_tweet,
+				  {}
+				).then( function( el ) {
+				  console.log('tweet added:', el);
+				});					 
+		 }
+	 }	 
+ } catch (err) {
+	console.log(err, event.data)	 
+ }
+});
+
+class BringwoodApp extends Polymer.Element {
+    static get is() {
+        return 'bringwood-app';
+    }
+    static get properties() {
+        return {
+     	 environment: {
+     		 type: Object
+     	 }
+      }
+    }
+    ready() {
+        super.ready();
+        contents = this.$.contents;
+        if ( !localStorage.getItem("environment") ) {
+        	localStorage.setItem('environment', JSON.stringify(prod))
+        }
+        this.set('environment', JSON.parse(localStorage.getItem("environment")))
+        this.$.environment_toggle.addEventListener('change', function () {
+            if (this.checked) {
+              localStorage.setItem('environment', JSON.stringify(prod))
+            } else {
+               localStorage.setItem('environment', JSON.stringify(dev))
+            }
+            var env = JSON.parse(localStorage.getItem("environment"))
+            this.set('environment.title', env.title )
+            location.reload();
+		});         
+    }
+}
+customElements.define(BringwoodApp.is, BringwoodApp);
+</script>
+</dom-module>

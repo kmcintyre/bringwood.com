@@ -1,0 +1,26 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/bringwood-app.html",
+  "fragments": [
+    "src/rank-wrapper.html",
+    "src/tmdb-movie.html",
+    "src/tmdb-tv.html",
+    "src/tweet-wrapper.html" 
+  ],
+  "sources": [
+    "src/**/*",
+    "images/**/*",
+    "bower.json"
+  ],
+  "extraDependencies": [
+    "bower_components/webcomponentsjs/*.js"
+  ],
+  "lint": {
+    "rules": ["polymer-2"]
+  },
+  "builds": [{
+  	"preset": "es5-bundled",
+  	"addServiceWorker": false,
+  	"addPushManifest": false
+  }]
+}

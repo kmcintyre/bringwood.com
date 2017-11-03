@@ -4,17 +4,16 @@
 <dom-module id="tmdb-movie">
 <template>
 <style include="iron-flex iron-flex-alignment">
-	:host {
-		width: 500px 
+	:host { 
 	}
 	img.movie {
-		padding: 2px
+		margin: 2px 10px 2px 10px;
+		padding: 2px;
+		border-radius: 4px;
+		border: 12px solid rgba(0, 0, 0, 0.3);
 	}	
-	.fixed {
-		width: 500px
-	}		
 </style>
-<div class="layout horizontal fixed">
+<div class="layout horizontal">
 	<img src="https://image.tmdb.org/t/p/w92/{{tmdb.poster_path}}" class="movie"/>
 	<div class="layout vertical flex">
 		<div><b>{{tmdb.original_title}}</b></div>

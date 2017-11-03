@@ -8,8 +8,6 @@
     
 	<meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <base href="/">
-
     <link rel="icon" href="images/favicon.ico">
     
     <meta name="application-name">
@@ -45,24 +43,25 @@
     <meta name="msapplication-tap-highlight" content="no">
 
     <script>
+	    function native_domain() {
+	        if ((document.domain.match(/\./g) || []).length == 2) {
+	            return document.domain.substring(document.domain.indexOf('.') + 1)
+	        } else {
+	            return document.domain
+	        }          
+	    }
+	    nativeDomain = native_domain() 
       // Register the base URL
-      const baseUrl = document.querySelector('base').href;
-      // Load and register pre-caching Service Worker
       if ('serviceWorker' in navigator && location.protocol == 'https:') {
+      	const baseUrl = document.querySelector('base').href;      
         window.addEventListener('load', function() {
           navigator.serviceWorker.register(baseUrl + 'service-worker.js');
         });
       }
       
-      function nativeDomain() {
-          if ((document.domain.match(/\./g) || []).length == 2) {
-              return document.domain.substring(document.domain.indexOf('.') + 1)
-          } else {
-              return document.domain
-          }          
-      }      
-      document.querySelector('title').innerHTML = nativeDomain() 
-      document.querySelector('meta[name="application-name"]').setAttribute('content', nativeDomain() + ' - Streaming Hollywood Analytics')
+            
+      document.querySelector('title').innerHTML = nativeDomain; 
+      document.querySelector('meta[name="application-name"]').setAttribute('content', nativeDomain + ' - Streaming Hollywood Analytics')
     </script>
 
     <script src="bower_components/webcomponentsjs/webcomponents-loader.js"></script>    

@@ -3,17 +3,22 @@
 
 <link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-range-slider/paper-range-slider.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 
 <link rel="import" href="tweet-wrapper.html">
 <link rel="import" href="rank-wrapper.html">
 <link rel="import" href="tmdb-tv.html">
 <link rel="import" href="tmdb-movie.html">
+<link rel="import" href="twitter-friends.html">
 
 <dom-module id="bringwood-app">
    <template>
-    <style>
+    <style include="iron-flex">
     :host {
       --app-drawer-width: 400px;
     }    
@@ -24,8 +29,11 @@
     .drawer-content {
       padding-top: 152px;
     }
-    paper-icon-item {
-    	padding-left: 50px
+    paper-checkbox span {
+    	padding-left: 32px
+    }
+    paper-icon-item, paper-checkbox, .leftpad {
+    	padding-left: 24px    	
     }
 	app-drawer {	
 	  --app-drawer-content-container: {	      
@@ -34,6 +42,17 @@
 	      background-color: #eee;      	  
 	  };
 	}
+	paper-toggle-button::shadow .toggle {
+      background-color: #55acee;
+    }
+    iron-selector > * {
+      padding: 8px;
+    }
+    .iron-selected {
+      background-color: var(--google-blue-500);
+      color: white;
+    }	
+	
 	#contents {
 		margin-top:10px
 	}
@@ -63,6 +82,28 @@
 		            	<iron-icon icon="av:play-circle-outline" slot="item-icon"></iron-icon>
 		            	<span>Stream</span>
 		          </paper-icon-item>
+				  <paper-range-slider snaps pin step='100' min='0' max='2000' value-max='2000' disabled>Testing</paper-range-slider>
+          	      <paper-checkbox><span>Unranked</span></paper-checkbox>		          
+		          <paper-checkbox><span>Retweet</span></paper-checkbox>
+		          
+		          <div class="leftpad layout horizontal">
+		          	  <div>
+		          	  	<label>Filter</label>
+	                  	<iron-selector multi selected="an-unknown-key" attr-for-selected="name">
+			            <div name="conversations">Conversions</div>
+			            <div name="instagrams">Instagrams</div>						
+			            <div name="mentions">Mentions</div>
+					  	</iron-selector>
+					  </div>
+					  <div>
+					  	  <label>Data</label> 
+		                  <iron-selector multi selected="an-unknown-key" attr-for-selected="name">
+				            <div name="friends">Friends</div>
+				            <div name="rank">Rank</div>
+							<div name="noted">Noted</div>
+						  </iron-selector>
+					  </div>					  
+				  </div> 		          
 	          </div>
 	      </app-drawer>	      
 	      <div id="contents"></div>
@@ -88,7 +129,21 @@ if ( true ) {
 		  return t;
 		}(document, "script", "twitter-wjs"));	
 }
-var service = JSON.parse(localStorage.getItem('environment')).service
+
+var prod = { on: true, title: 'Production', service: 'service.' + nativeDomain };
+var dev = { on: false, title: 'Development', service: 'dev.' + nativeDomain };
+
+function socket_service() {
+	try {
+		var s = JSON.parse(localStorage.getItem('environment')).service
+		if (s) {
+			return s;
+		}
+	} catch (err) {}	
+	return prod.service
+}
+var service = socket_service();
+
 const socket = new WebSocket('ws://' + service + ':8080');
 
 socket.addEventListener('open', function (event) {
@@ -101,9 +156,6 @@ var base_domain = window.location.hostname
 if ( base_domain.split('.').length == 3 ) {
 	base_domain = base_domain.substring(base_domain.indexOf('.') + 1)
 }
-
-var prod = { on: true, title: 'Production', service: 'service.' + base_domain };
-var dev = { on: false, title: 'Development', service: 'dev.' + base_domain };
 
 socket.addEventListener('message', function (event) {
  try {
@@ -123,8 +175,16 @@ socket.addEventListener('message', function (event) {
 			 slot_tweet.setAttribute('slot', 'tweet')
 			 tw.appendChild(slot_tweet)
 			 
+			 var friends = document.createElement('twitter-friends')
+			 friends.setAttribute('slot', 'friends')
+			 friends.setAttribute('tweet', JSON.stringify(tweet))			 
+			 tw.appendChild(friends)			 
 			 
-			 fetch('http://' + service + '/rank', {
+			 var league_service = tweet.league + '.' + nativeDomain;
+			 if (JSON.parse(localStorage.getItem('environment')).title == dev.title) {
+				 var league_service = 'dev.' + nativeDomain;
+			 }				 
+			 fetch('http://' + league_service + '/rank', {
     			method: 'post',
     			body: JSON.stringify({ 'league': tweet.league, 'profile': tweet.profile})
   		 	 }).then((resp) => resp.json()).then(function(rank_data) {									
@@ -134,8 +194,8 @@ socket.addEventListener('message', function (event) {
 				 rank.setAttribute('current_rank', tweet.rank ? parseInt(tweet.rank): 0)
 				 tw.appendChild(rank)				
 			 })			 
-						 			 
-			 fetch('http://' + service + '/noted/' + tweet.noted_profile.split('/').pop(-1)).then((resp) => resp.json()).then(function(media_data) {
+			 
+			 fetch('http://' + league_service + '/noted/' + tweet.noted_profile.split('/').pop(-1)).then((resp) => resp.json()).then(function(media_data) {
 				if ( media_data ) {
 					 var tmdb = document.createElement('tmdb-' + media_data.media_type )
 					 tmdb.setAttribute('slot', 'tmdb')
@@ -183,7 +243,7 @@ class BringwoodApp extends Polymer.Element {
             if (this.checked) {
               localStorage.setItem('environment', JSON.stringify(prod))
             } else {
-               localStorage.setItem('environment', JSON.stringify(dev))
+              localStorage.setItem('environment', JSON.stringify(dev))
             }
             var env = JSON.parse(localStorage.getItem("environment"))
             this.set('environment.title', env.title )

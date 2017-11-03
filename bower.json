@@ -7,7 +7,10 @@
     "date-fns": "latest",
     "iron-icons": "latest",
     "paper-item": "latest",
-    "paper-toggle-button": "latest"
+    "paper-toggle-button": "latest",
+    "paper-range-slider": "IftachSadeh/paper-range-slider#latest",
+    "iron-selector": "^2.0.0",
+    "paper-checkbox": "^2.0.1"
   },
   "private": true
 }

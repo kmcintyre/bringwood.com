@@ -6,7 +6,8 @@
     "src/tmdb-movie.html",
     "src/tmdb-tv.html",
     "src/tweet-wrapper.html",
-    "src/twitter-friends.html" 
+    "src/twitter-friends.html",
+    "src/social-match.html" 
   ],
   "sources": [
     "src/**/*",

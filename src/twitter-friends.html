@@ -11,11 +11,11 @@
 	}
 </style>
 <div>
-	Friends 1
+	Follows {{ follows.length }}
 </div>
 <div class="flex"></div>   
 <div>
-	Friends 2
+	Mutual {{ mutual.length }}
 </div>
 </template>
 <script>
@@ -27,7 +27,13 @@
             return {
          	 tweet: {
          		 type: Object
-         	 }
+         	 },
+         	 follows: {
+         		type: Array
+         	 },
+         	 mutual: {
+          		type: Array
+          	 }
           }
         }
         ready() {
@@ -42,13 +48,15 @@
 			 }
              var friends_url = 'http://' + league_service + '/friends/' + this.tweet.league + '/' + this.tweet.twitter + scout;
              console.log('friends url:', friends_url)
+             var local = this
 			 fetch(friends_url).then((resp) => resp.json()).catch(function(error) {
 				console.log('There has been a problem with your fetch operation: ' + error.message);
 			 }).then(function(scout_data) {
 				if ( scout_data ) {
-					 console.log('scout data:', scout_data)		
+					local.set('follows', scout_data[local.tweet.league + '_follows'])
+             		local.set('mutual', scout_data[local.tweet.league + '_mutual']) 
 				}
-			})            
+			 })            
         }
     }
     customElements.define(TwitterFriends.is, TwitterFriends);

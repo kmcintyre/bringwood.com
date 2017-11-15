@@ -8,13 +8,13 @@
     "iron-pages": "latest",
     "iron-icons": "latest",
     "paper-item": "latest",
+    "paper-input": "latest",
     "paper-button": "latest",
     "paper-toggle-button": "latest",
-    "paper-range-slider": "IftachSadeh/paper-range-slider#latest",
-    "iron-selector": "^2.0.0",
-    "paper-checkbox": "^2.0.1",
-    "paper-tabs": "^2.0.0",
-    "paper-collapse-item": "Collaborne/paper-collapse-item#^2.0.3"
+    "iron-selector": "latest",
+    "iron-list": "latest",
+    "paper-checkbox": "latest",
+    "paper-tabs": "latest"
   },
   "private": true
 }
